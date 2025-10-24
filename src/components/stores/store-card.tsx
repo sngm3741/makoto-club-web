@@ -25,13 +25,13 @@ export const StoreCard = ({ store }: StoreCardProps) => {
         <div className="rounded-xl bg-slate-50 p-3">
           <dt className="font-medium text-slate-700">平均稼ぎ</dt>
           <dd className="mt-1 text-lg font-semibold text-pink-600">
-            {store.averageEarning}万円
+            {store.averageEarningLabel ?? `${store.averageEarning}万円`}
           </dd>
         </div>
         <div className="rounded-xl bg-slate-50 p-3">
           <dt className="font-medium text-slate-700">平均待機時間</dt>
           <dd className="mt-1 text-lg font-semibold text-slate-800">
-            {store.waitTimeHours}時間
+            {store.waitTimeLabel ?? `${store.waitTimeHours}時間`}
           </dd>
         </div>
       </dl>
@@ -54,5 +54,5 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
   pinsaro: 'ピンサロ',
 };
 
-const translateCategory = (category: string) =>
+export const translateCategory = (category: string) =>
   CATEGORY_LABEL_MAP[category] ?? category;

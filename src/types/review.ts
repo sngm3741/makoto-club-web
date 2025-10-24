@@ -39,6 +39,8 @@ export interface StoreSummary {
   prefecture: string;
   category: ReviewCategory;
   averageEarning: number;
+  averageEarningLabel?: string;
   waitTimeHours: number;
+  waitTimeLabel?: string;
   reviewCount: number;
 }

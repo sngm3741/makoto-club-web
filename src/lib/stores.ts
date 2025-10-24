@@ -26,10 +26,12 @@ function aggregateMockStores(): StoreSummary[] {
         Math.round(((existing.averageEarning * (existing.reviewCount - 1) + review.averageEarning) /
           existing.reviewCount) *
           10) / 10;
+      existing.averageEarningLabel = `${existing.averageEarning}万円`;
       existing.waitTimeHours =
         Math.round(((existing.waitTimeHours * (existing.reviewCount - 1) + review.waitTimeHours) /
           existing.reviewCount) *
           10) / 10;
+      existing.waitTimeLabel = `${existing.waitTimeHours}時間`;
     } else {
       storeMap.set(review.storeName, {
         id: `store-${storeMap.size + 1}`,
@@ -37,7 +39,9 @@ function aggregateMockStores(): StoreSummary[] {
         prefecture: review.prefecture,
         category: review.category,
         averageEarning: review.averageEarning,
+        averageEarningLabel: `${review.averageEarning}万円`,
         waitTimeHours: review.waitTimeHours,
+        waitTimeLabel: `${review.waitTimeHours}時間`,
         reviewCount: 1,
       });
     }

@@ -5,15 +5,13 @@ import { SearchForm } from '@/components/search/search-form';
 import { ReviewCard } from '@/components/reviews/review-card';
 import { fetchReviews } from '@/lib/reviews';
 
-type ReviewsPageProps = {
-  searchParams: {
-    prefecture?: string;
-    category?: string;
-    avgEarning?: string;
-    store?: string;
-    page?: string;
-    sort?: string;
-  };
+type ReviewsSearchParams = {
+  prefecture?: string;
+  category?: string;
+  avgEarning?: string;
+  store?: string;
+  page?: string;
+  sort?: string;
 };
 
 const SORT_OPTIONS = [
@@ -22,16 +20,22 @@ const SORT_OPTIONS = [
   { value: 'earning', label: '平均稼ぎが高い順' },
 ] as const;
 
-export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
-  const page = parseNumber(searchParams.page) || 1;
-  const avgEarning = searchParams.avgEarning ? parseNumber(searchParams.avgEarning) : undefined;
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<ReviewsSearchParams>;
+}) {
+  const resolved = await searchParams;
+
+  const page = parseNumber(resolved.page) || 1;
+  const avgEarning = resolved.avgEarning ? parseNumber(resolved.avgEarning) : undefined;
 
   const { items, total, limit } = await fetchReviews({
-    prefecture: searchParams.prefecture,
-    category: searchParams.category,
+    prefecture: resolved.prefecture,
+    category: resolved.category,
     avgEarning,
-    storeName: searchParams.store,
-    sort: searchParams.sort,
+    storeName: resolved.store,
+    sort: resolved.sort,
     page,
   });
 
@@ -46,15 +50,15 @@ export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
 
       <SearchForm
         redirectPath="/reviews"
-        initialPrefecture={searchParams.prefecture}
-        initialCategory={searchParams.category}
+        initialPrefecture={resolved.prefecture}
+        initialCategory={resolved.category}
         initialAvgEarning={avgEarning}
       />
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
         <span className="font-semibold text-slate-700">並び替え:</span>
         {SORT_OPTIONS.map((option) => (
-          <SortLink key={option.label} label={option.label} value={option.value} searchParams={searchParams} />
+          <SortLink key={option.label} label={option.label} value={option.value} searchParams={resolved} />
         ))}
       </div>
 
@@ -78,11 +82,11 @@ export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
         pageSize={limit}
         basePath="/reviews"
         searchParams={{
-          prefecture: searchParams.prefecture,
-          category: searchParams.category,
+          prefecture: resolved.prefecture,
+          category: resolved.category,
           avgEarning,
-          store: searchParams.store,
-          sort: searchParams.sort,
+          store: resolved.store,
+          sort: resolved.sort,
         }}
       />
     </div>
@@ -96,7 +100,7 @@ const SortLink = ({
 }: {
   label: string;
   value: string | undefined;
-  searchParams: ReviewsPageProps['searchParams'];
+  searchParams: ReviewsSearchParams;
 }) => {
   const params = new URLSearchParams();
   if (searchParams.prefecture) params.set('prefecture', searchParams.prefecture);

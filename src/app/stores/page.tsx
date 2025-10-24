@@ -3,22 +3,26 @@ import { StoreCard } from '@/components/stores/store-card';
 import { Pagination } from '@/components/common/pagination';
 import { fetchStores } from '@/lib/stores';
 
-type StoresPageProps = {
-  searchParams: {
-    prefecture?: string;
-    category?: string;
-    avgEarning?: string;
-    page?: string;
-  };
+type StoresSearchParams = {
+  prefecture?: string;
+  category?: string;
+  avgEarning?: string;
+  page?: string;
 };
 
-export default async function StoresPage({ searchParams }: StoresPageProps) {
-  const page = parseNumber(searchParams.page) || 1;
-  const avgEarning = searchParams.avgEarning ? parseNumber(searchParams.avgEarning) : undefined;
+export default async function StoresPage({
+  searchParams,
+}: {
+  searchParams: Promise<StoresSearchParams>;
+}) {
+  const resolved = await searchParams;
+
+  const page = parseNumber(resolved.page) || 1;
+  const avgEarning = resolved.avgEarning ? parseNumber(resolved.avgEarning) : undefined;
 
   const { items, total, limit } = await fetchStores({
-    prefecture: searchParams.prefecture,
-    category: searchParams.category,
+    prefecture: resolved.prefecture,
+    category: resolved.category,
     avgEarning,
     page,
   });
@@ -33,8 +37,8 @@ export default async function StoresPage({ searchParams }: StoresPageProps) {
       </header>
 
       <SearchForm
-        initialPrefecture={searchParams.prefecture}
-        initialCategory={searchParams.category}
+        initialPrefecture={resolved.prefecture}
+        initialCategory={resolved.category}
         initialAvgEarning={avgEarning}
       />
 
@@ -58,8 +62,8 @@ export default async function StoresPage({ searchParams }: StoresPageProps) {
         pageSize={limit}
         basePath="/stores"
         searchParams={{
-          prefecture: searchParams.prefecture,
-          category: searchParams.category,
+          prefecture: resolved.prefecture,
+          category: resolved.category,
           avgEarning,
         }}
       />
