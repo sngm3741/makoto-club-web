@@ -40,12 +40,15 @@ npm run dev
 必要に応じて `.env.local` に以下を設定してください。
 
 ```
-NEXT_PUBLIC_LINE_LOGIN_URL=<LINE OAuth のフロント向けログインURL>
-NEXT_PUBLIC_API_BASE_URL=<バックエンドAPIのエンドポイント>
-SITE_URL=<本番サイトのURL> # 任意: メタデータ用
+API_BASE_URL=<サーバーコンポーネント用のAPIベースURL（例: http://localhost:8080）>
+NEXT_PUBLIC_LINE_AUTH_BASE_URL=<LINE 認証サービスのベースURL（例: https://auth.iqx9l9hxmw0dj3kt.space）>
+NEXT_PUBLIC_API_BASE_URL=<バックエンドAPIのエンドポイント（例: https://makoto.iqx9l9hxmw0dj3kt.space)>
+NEXT_PUBLIC_SITE_URL=<本番サイトのURL> # 任意: メタデータ用
+SITE_URL=<本番サイトのURL> # 任意: SSR 用
 ```
 
-`NEXT_PUBLIC_API_BASE_URL` を設定するとバックエンドAPIへ直接 `fetch` します。未設定の場合はモックデータで画面を構成します。
+- `NEXT_PUBLIC_LINE_AUTH_BASE_URL` が設定されていると、ヘッダーの「相談はこちら」および投稿フォームのログインボタンから LINE OAuth フロー（ポップアップ）が起動します。完了時には `sessionStorage` の `makotoClubLineAuth` に `{ accessToken, lineUser }` が保存されます。
+- `NEXT_PUBLIC_API_BASE_URL` を設定するとバックエンドAPIへ直接 `fetch` します。未設定の場合はモックデータで画面を構成します。
 
 ## ディレクトリ構成
 
@@ -62,6 +65,6 @@ src/
 ## 今後のTODO
 
 - バックエンドAPI仕様決定後の `fetch` 実装差し替え
-- LINE OAuth フローの実接続
+- LINE OAuth リフレッシュトークン対応・セッション継続
 - 役に立ったボタン等のインタラクティブ機能追加
 - デザインガイドライン（ブランドカラー・ロゴ）の確定

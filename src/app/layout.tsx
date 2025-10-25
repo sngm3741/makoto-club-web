@@ -17,11 +17,6 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const LINE_LOGIN_URL =
-  process.env.LINE_LOGIN_URL ??
-  process.env.NEXT_PUBLIC_LINE_LOGIN_URL ??
-  '/auth/line/login';
-
 export const metadata: Metadata = {
   title: {
     default: `${SITE_NAME} | 風俗口コミで働き先さがし`,
@@ -54,7 +49,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}
       >
         <div className="flex min-h-screen flex-col">
-          <Header lineLoginHref={LINE_LOGIN_URL} />
+          <Header />
           <main className="flex-1">
             <div className="mx-auto w-full max-w-5xl px-4 py-8">{children}</div>
           </main>

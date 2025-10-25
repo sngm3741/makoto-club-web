@@ -2,17 +2,43 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { NAV_LINKS, SITE_NAME } from '@/config/site';
+import { startLineLogin } from '@/lib/line-auth';
 
-type HeaderProps = {
-  lineLoginHref: string;
-};
+const LINE_AUTH_BASE_URL =
+  process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
 
-export const Header = ({ lineLoginHref }: HeaderProps) => {
+export const Header = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleLineLogin = useCallback(async () => {
+    setIsMenuOpen(false);
+
+    if (typeof window === 'undefined') return;
+
+    if (!LINE_AUTH_BASE_URL) {
+      window.location.href = '/reviews/new';
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      await startLineLogin(LINE_AUTH_BASE_URL);
+    } catch (error) {
+      console.error('LINEログインに失敗しました', error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : 'LINEログインに失敗しました。時間を置いて再度お試しください。',
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
 
   return (
     <header className="relative sticky top-0 z-40 w-full border-b border-slate-100 bg-white/90 backdrop-blur">
@@ -42,13 +68,14 @@ export const Header = ({ lineLoginHref }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href={lineLoginHref}
-            onClick={() => setIsMenuOpen(false)}
-            className="hidden rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-pink-400 hover:to-violet-400 md:inline-block"
+          <button
+            type="button"
+            onClick={handleLineLogin}
+            className="hidden rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-pink-400 hover:to-violet-400 disabled:cursor-not-allowed disabled:opacity-60 md:inline-block"
+            disabled={authLoading}
           >
-            相談はこちら
-          </Link>
+            {authLoading ? '認証中…' : '相談はこちら'}
+          </button>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200 md:hidden"
@@ -97,13 +124,14 @@ export const Header = ({ lineLoginHref }: HeaderProps) => {
               </Link>
             );
           })}
-          <Link
-            href={lineLoginHref}
-            onClick={() => setIsMenuOpen(false)}
-            className="rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 text-center text-white"
+          <button
+            type="button"
+            onClick={handleLineLogin}
+            disabled={authLoading}
+            className="rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 text-center text-white disabled:cursor-not-allowed disabled:opacity-70"
           >
-            相談はこちら
-          </Link>
+            {authLoading ? '認証中…' : '相談はこちら'}
+          </button>
         </nav>
       </div>
     </header>

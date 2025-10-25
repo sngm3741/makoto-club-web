@@ -11,6 +11,12 @@ import {
   SPEC_OPTIONS,
   WAIT_TIME_OPTIONS,
 } from '@/constants/filters';
+import {
+  AUTH_UPDATE_EVENT,
+  LineLoginResult,
+  readStoredAuth,
+  startLineLogin,
+} from '@/lib/line-auth';
 
 type FormValues = {
   storeName: string;
@@ -23,25 +29,14 @@ type FormValues = {
   averageEarning: number;
 };
 
-type StoredAuth =
-  | {
-      accessToken: string;
-      lineUser: {
-        userId: string;
-        displayName: string;
-        avatarUrl?: string;
-      };
-    }
-  | undefined;
-
-const AUTH_STORAGE_KEY = 'makotoClubLineAuth';
-const LINE_LOGIN_URL =
-  process.env.NEXT_PUBLIC_LINE_LOGIN_URL ?? '/auth/line/login';
+const LINE_AUTH_BASE_URL =
+  process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
 
 export const ReviewForm = () => {
-  const [auth, setAuth] = useState<StoredAuth>();
+  const [auth, setAuth] = useState<LineLoginResult | undefined>();
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   const {
     register,
@@ -63,13 +58,50 @@ export const ReviewForm = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return;
+    const current = readStoredAuth();
+    if (current) {
+      setAuth(current);
+    }
+
+    const listener: EventListener = (event) => {
+      const custom = event as CustomEvent<LineLoginResult>;
+      if (!custom.detail) return;
+      setAuth(custom.detail);
+      setErrorMessage('');
+      setStatus('idle');
+    };
+
+    window.addEventListener(AUTH_UPDATE_EVENT, listener);
+    return () => {
+      window.removeEventListener(AUTH_UPDATE_EVENT, listener);
+    };
+  }, []);
+
+  const handleLineLogin = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (!LINE_AUTH_BASE_URL) {
+      setErrorMessage('LINEログインのエンドポイントが設定されていません。');
+      setStatus('error');
+      return;
+    }
+
+    setAuthLoading(true);
+    setErrorMessage('');
+
     try {
-      const parsed = JSON.parse(raw) as StoredAuth;
-      setAuth(parsed);
+      const result = await startLineLogin(LINE_AUTH_BASE_URL);
+      setAuth(result);
+      setStatus('idle');
     } catch (error) {
-      console.error('LINE認証情報の読み込みに失敗しました', error);
+      console.error(error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'LINEログインに失敗しました。時間を置いて再度お試しください。',
+      );
+      setStatus('error');
+    } finally {
+      setAuthLoading(false);
     }
   }, []);
 
@@ -130,16 +162,18 @@ export const ReviewForm = () => {
       <header className="space-y-2">
         <h1 className="text-xl font-semibold text-slate-900">アンケートを投稿する</h1>
         <p className="text-sm text-slate-600">
-          LINEで本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典も
-          LINEでご案内します。
+        LINEで本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典も
+        LINEでご案内します。
         </p>
         {!auth?.lineUser ? (
-          <a
-            href={LINE_LOGIN_URL}
+          <button
+            type="button"
+            onClick={handleLineLogin}
             className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:from-pink-400 hover:to-violet-400"
+            disabled={authLoading}
           >
-            LINEでログインして投稿する
-          </a>
+            {authLoading ? 'LINEで認証中…' : 'LINEでログインして投稿する'}
+          </button>
         ) : (
           <div className="inline-flex items-center gap-3 rounded-full bg-pink-50 px-4 py-2 text-sm text-pink-700">
             <span>ログイン中: {auth.lineUser.displayName} さん</span>

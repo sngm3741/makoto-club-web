@@ -12,4 +12,4 @@ export const FOOTER_LINKS = [
   { href: '/contact', label: 'お問い合わせ（削除依頼）' },
 ] as const;
 
-export const DEFAULT_LINE_LOGIN_PATH = '/auth/line/login';
+export const DEFAULT_LINE_LOGIN_PATH = '/line/login';
