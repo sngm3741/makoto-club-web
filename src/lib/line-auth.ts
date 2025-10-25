@@ -83,16 +83,21 @@ export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> 
     throw new Error('LINEログインの初期化に失敗しました。');
   }
 
-  const popup = window.open(
-    authorizationUrl,
-    'lineLogin',
-    'width=480,height=720,menubar=no,toolbar=no',
-  );
+  // iOSがwindow.openerを切り離すから
+  const features = 'width=480,height=720,menubar=no,toolbar=no,noopener=no,noreferrer=no';
+  const popup = window.open('', 'lineLogin', features);
 
   if (!popup) {
     throw new Error('ポップアップを開けませんでした。ブラウザの設定を確認してください。');
   }
 
+  try {
+    popup.opener = window;
+  } catch {
+    // ignore if browser blocks setting opener
+  }
+
+  popup.location.href = authorizationUrl;
   popup.focus();
 
   return new Promise<LineLoginResult>((resolve, reject) => {
