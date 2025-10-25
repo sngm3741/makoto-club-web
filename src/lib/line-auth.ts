@@ -61,29 +61,8 @@ export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> 
   const origin = window.location.origin;
   const authBaseOrigin = new URL(endpoint).origin;
 
-  const response = await fetch(`${endpoint}/line/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ origin }),
-  });
-
-  if (!response.ok) {
-    const message = await safeParseError(response);
-    throw new Error(message ?? 'LINEログインの開始に失敗しました。');
-  }
-
-  const { authorizationUrl, state } = (await response.json()) as {
-    authorizationUrl: string;
-    state: string;
-  };
-
-  if (!authorizationUrl || !state) {
-    throw new Error('LINEログインの初期化に失敗しました。');
-  }
-
-  // iOSがwindow.openerを切り離すから
+  // Safari などはユーザー操作と非同期処理の間で window.open を呼ぶとポップアップブロックする。
+  // 先に空ウィンドウを開いてユーザー操作と関連付けた上で、後から URL を差し替える。
   const features = 'width=480,height=720,menubar=no,toolbar=no,noopener=no,noreferrer=no';
   const popup = window.open('', 'lineLogin', features);
 
@@ -95,6 +74,30 @@ export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> 
     popup.opener = window;
   } catch {
     // ignore if browser blocks setting opener
+  }
+
+  const response = await fetch(`${endpoint}/line/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ origin }),
+  });
+
+  if (!response.ok) {
+    popup.close();
+    const message = await safeParseError(response);
+    throw new Error(message ?? 'LINEログインの開始に失敗しました。');
+  }
+
+  const { authorizationUrl, state } = (await response.json()) as {
+    authorizationUrl: string;
+    state: string;
+  };
+
+  if (!authorizationUrl || !state) {
+    popup.close();
+    throw new Error('LINEログインの初期化に失敗しました。');
   }
 
   popup.location.href = authorizationUrl;
