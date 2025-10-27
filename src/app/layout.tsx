@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { LineLoginHandler } from '@/components/line/line-login-handler';
 import { SITE_NAME } from '@/config/site';
 
 import './globals.css';
@@ -48,6 +49,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}
       >
+        <LineLoginHandler />
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">

@@ -14,7 +14,7 @@ export type LineLoginResult = {
 export const AUTH_STORAGE_KEY = 'makotoClubLineAuth';
 export const AUTH_UPDATE_EVENT = 'line-auth:updated';
 
-type LoginResponseMessage =
+export type LoginResponseMessage =
   | {
       type: 'line-login-result';
       success: true;
@@ -48,7 +48,7 @@ export function readStoredAuth(): LineLoginResult | undefined {
   }
 }
 
-export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> {
+export async function startLineLogin(baseUrl: string): Promise<void> {
   if (typeof window === 'undefined') {
     throw new Error('クライアント環境でのみ実行できます。');
   }
@@ -59,22 +59,6 @@ export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> 
 
   const endpoint = normaliseBaseUrl(baseUrl);
   const origin = window.location.origin;
-  const authBaseOrigin = new URL(endpoint).origin;
-
-  // Safari などはユーザー操作と非同期処理の間で window.open を呼ぶとポップアップブロックする。
-  // 先に空ウィンドウを開いてユーザー操作と関連付けた上で、後から URL を差し替える。
-  const features = 'width=480,height=720,menubar=no,toolbar=no,noopener=no,noreferrer=no';
-  const popup = window.open('', 'lineLogin', features);
-
-  if (!popup) {
-    throw new Error('ポップアップを開けませんでした。ブラウザの設定を確認してください。');
-  }
-
-  try {
-    popup.opener = window;
-  } catch {
-    // ignore if browser blocks setting opener
-  }
 
   const response = await fetch(`${endpoint}/line/login`, {
     method: 'POST',
@@ -85,83 +69,22 @@ export async function startLineLogin(baseUrl: string): Promise<LineLoginResult> 
   });
 
   if (!response.ok) {
-    popup.close();
     const message = await safeParseError(response);
     throw new Error(message ?? 'LINEログインの開始に失敗しました。');
   }
 
-  const { authorizationUrl, state } = (await response.json()) as {
+  const { authorizationUrl } = (await response.json()) as {
     authorizationUrl: string;
-    state: string;
   };
 
-  if (!authorizationUrl || !state) {
-    popup.close();
+  if (!authorizationUrl) {
     throw new Error('LINEログインの初期化に失敗しました。');
   }
 
-  popup.location.href = authorizationUrl;
-  popup.focus();
-
-  return new Promise<LineLoginResult>((resolve, reject) => {
-    const cleanup = () => {
-      window.removeEventListener('message', handleMessage);
-      window.clearInterval(popupTimer);
-      if (!popup.closed) {
-        popup.close();
-      }
-    };
-
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== authBaseOrigin) {
-        return;
-      }
-
-      const data = event.data as LoginResponseMessage;
-      if (!data || data.type !== 'line-login-result') {
-        return;
-      }
-
-      if (!data.state || data.state !== state) {
-        cleanup();
-        reject(new Error('ログインの整合性チェックに失敗しました。'));
-        return;
-      }
-
-      cleanup();
-
-      if (!data.success) {
-        reject(new Error(data.error ?? 'LINEログインがキャンセルされました。'));
-        return;
-      }
-
-      const payload = data.payload;
-      if (!payload?.accessToken || !payload?.lineUser) {
-        reject(new Error('LINEログインの応答が不正です。'));
-        return;
-      }
-
-      const result: LineLoginResult = {
-        accessToken: payload.accessToken,
-        lineUser: payload.lineUser,
-      };
-
-      persistAuthResult(result);
-      resolve(result);
-    };
-
-    const popupTimer = window.setInterval(() => {
-      if (popup.closed) {
-        cleanup();
-        reject(new Error('LINEログインがキャンセルされました。'));
-      }
-    }, 500);
-
-    window.addEventListener('message', handleMessage);
-  });
+  window.location.assign(authorizationUrl);
 }
 
-function persistAuthResult(result: LineLoginResult) {
+export function persistAuthResult(result: LineLoginResult) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(result));
   window.dispatchEvent(

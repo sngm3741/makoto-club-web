@@ -89,8 +89,7 @@ export const ReviewForm = () => {
     setErrorMessage('');
 
     try {
-      const result = await startLineLogin(LINE_AUTH_BASE_URL);
-      setAuth(result);
+      await startLineLogin(LINE_AUTH_BASE_URL);
       setStatus('idle');
     } catch (error) {
       console.error(error);
