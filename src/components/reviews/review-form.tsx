@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import {
@@ -31,12 +31,39 @@ type FormValues = {
 
 const LINE_AUTH_BASE_URL =
   process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
+const PENDING_REVIEW_STORAGE_KEY = 'makotoClubPendingReview';
+
+const storePendingReview = (values: FormValues) => {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(PENDING_REVIEW_STORAGE_KEY, JSON.stringify(values));
+  } catch (error) {
+    console.error('Pending review の保存に失敗しました', error);
+  }
+};
+
+const readPendingReview = (): FormValues | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  const raw = sessionStorage.getItem(PENDING_REVIEW_STORAGE_KEY);
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as FormValues;
+  } catch {
+    return undefined;
+  }
+};
+
+const clearPendingReview = () => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.removeItem(PENDING_REVIEW_STORAGE_KEY);
+};
 
 export const ReviewForm = () => {
   const [auth, setAuth] = useState<LineLoginResult | undefined>();
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const hasAutoSubmitted = useRef(false);
 
   const {
     register,
@@ -69,6 +96,7 @@ export const ReviewForm = () => {
       setAuth(custom.detail);
       setErrorMessage('');
       setStatus('idle');
+      hasAutoSubmitted.current = false;
     };
 
     window.addEventListener(AUTH_UPDATE_EVENT, listener);
@@ -107,8 +135,9 @@ export const ReviewForm = () => {
   const onSubmit = useCallback(
     async (values: FormValues) => {
       if (!auth?.accessToken) {
-        setErrorMessage('LINEでの本人確認が必要です。「相談はこちら」からログインしてください。');
-        setStatus('error');
+        storePendingReview(values);
+        hasAutoSubmitted.current = false;
+        handleLineLogin();
         return;
       }
 
@@ -159,6 +188,8 @@ export const ReviewForm = () => {
 
         setStatus('success');
         reset();
+        clearPendingReview();
+        hasAutoSubmitted.current = false;
       } catch (error) {
         console.error(error);
         setErrorMessage('投稿に失敗しました。時間を置いて再度お試しください。');
@@ -167,6 +198,21 @@ export const ReviewForm = () => {
     },
     [auth, reset],
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!auth?.accessToken) return;
+    if (hasAutoSubmitted.current) return;
+
+    const pending = readPendingReview();
+    if (!pending) return;
+
+    hasAutoSubmitted.current = true;
+    reset(pending);
+    setTimeout(() => {
+      void handleSubmit(onSubmit)();
+    }, 0);
+  }, [auth, handleSubmit, onSubmit, reset]);
 
   return (
     <section className="space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
