@@ -27,6 +27,7 @@ type FormValues = {
   specScore: number;
   waitTimeHours: number;
   averageEarning: number;
+  comment: string;
 };
 
 const LINE_AUTH_BASE_URL =
@@ -80,6 +81,7 @@ export const ReviewForm = () => {
       specScore: 100,
       waitTimeHours: 8,
       averageEarning: 10,
+      comment: '',
     },
   });
 
@@ -153,6 +155,7 @@ export const ReviewForm = () => {
         specScore: values.specScore,
         waitTimeHours: values.waitTimeHours,
         averageEarning: values.averageEarning,
+        comment: values.comment,
       };
 
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
@@ -231,11 +234,7 @@ export const ReviewForm = () => {
           >
             {authLoading ? 'LINEで認証中…' : 'LINEでログインして投稿する'}
           </button>
-        ) : (
-          <div className="inline-flex items-center gap-3 rounded-full bg-pink-50 px-4 py-2 text-sm text-pink-700">
-            <span>ログイン中: {auth.lineUser.displayName} さん</span>
-          </div>
-        )}
+        ) : null}
       </header>
 
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
@@ -358,6 +357,16 @@ export const ReviewForm = () => {
             </select>
           </Field>
         </div>
+
+        <Field label="感想・補足" error={errors.comment?.message}>
+          <textarea
+            id="comment"
+            rows={5}
+            placeholder="店舗の雰囲気やスタッフ対応など、自由にご記入ください"
+            {...register('comment')}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+          />
+        </Field>
 
         <div className="space-y-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-500">
           <p>投稿が完了すると、登録のLINEアカウントに PayPay 1,000円の受け取り方法をお送りします。</p>
