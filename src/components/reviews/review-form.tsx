@@ -116,9 +116,14 @@ export const ReviewForm = () => {
       setErrorMessage('');
 
       const payload = {
-        ...values,
+        storeName: values.storeName,
+        prefecture: values.prefecture,
+        category: values.category,
         visitedAt: values.visitedAt,
-        reviewer: auth.lineUser,
+        age: values.age,
+        specScore: values.specScore,
+        waitTimeHours: values.waitTimeHours,
+        averageEarning: values.averageEarning,
       };
 
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
@@ -138,11 +143,18 @@ export const ReviewForm = () => {
             body: JSON.stringify(payload),
           });
 
+          const data = await response.json().catch(() => null);
           if (!response.ok) {
-            throw new Error('投稿に失敗しました');
+            const message =
+              data && typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+                ? data.error
+                : '投稿に失敗しました。時間を置いて再度お試しください。';
+            throw new Error(message);
           }
 
-          await response.json();
+          if (data && typeof window !== 'undefined') {
+            console.info('投稿結果', data);
+          }
         }
 
         setStatus('success');

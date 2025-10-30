@@ -5,39 +5,19 @@ import { usePathname } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
 import { NAV_LINKS, SITE_NAME } from '@/config/site';
-import { startLineLogin } from '@/lib/line-auth';
 
-const LINE_AUTH_BASE_URL =
-  process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
+const OFFICIAL_LINE_URL = 'https://lin.ee/KN2j1G5';
 
 export const Header = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
 
-  const handleLineLogin = useCallback(async () => {
+  const handleLineLogin = useCallback(() => {
     setIsMenuOpen(false);
 
     if (typeof window === 'undefined') return;
 
-    if (!LINE_AUTH_BASE_URL) {
-      window.location.href = '/reviews/new';
-      return;
-    }
-
-    try {
-      setAuthLoading(true);
-      await startLineLogin(LINE_AUTH_BASE_URL);
-    } catch (error) {
-      console.error('LINEログインに失敗しました', error);
-      window.alert(
-        error instanceof Error
-          ? error.message
-          : 'LINEログインに失敗しました。時間を置いて再度お試しください。',
-      );
-    } finally {
-      setAuthLoading(false);
-    }
+    window.location.href = OFFICIAL_LINE_URL;
   }, []);
 
   return (
@@ -71,10 +51,9 @@ export const Header = () => {
           <button
             type="button"
             onClick={handleLineLogin}
-            className="hidden rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-pink-400 hover:to-violet-400 disabled:cursor-not-allowed disabled:opacity-60 md:inline-block"
-            disabled={authLoading}
+            className="hidden rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-pink-400 hover:to-violet-400 md:inline-block"
           >
-            {authLoading ? '認証中…' : '相談はこちら'}
+            相談はこちら
           </button>
           <button
             type="button"
@@ -127,10 +106,9 @@ export const Header = () => {
           <button
             type="button"
             onClick={handleLineLogin}
-            disabled={authLoading}
-            className="rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 text-center text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 text-center text-white"
           >
-            {authLoading ? '認証中…' : '相談はこちら'}
+            相談はこちら
           </button>
         </nav>
       </div>
