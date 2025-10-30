@@ -30,8 +30,7 @@ type FormValues = {
   comment: string;
 };
 
-const LINE_AUTH_BASE_URL =
-  process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
+const LINE_AUTH_BASE_URL = process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
 const PENDING_REVIEW_STORAGE_KEY = 'makotoClubPendingReview';
 
 const storePendingReview = (values: FormValues) => {
@@ -177,8 +176,21 @@ export const ReviewForm = () => {
 
           const data = await response.json().catch(() => null);
           if (!response.ok) {
+            if (response.status === 401) {
+              storePendingReview(values);
+              setStatus('idle');
+              setErrorMessage('');
+              hasAutoSubmitted.current = false;
+              setAuth(undefined);
+              handleLineLogin();
+              return;
+            }
             const message =
-              data && typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
+              data &&
+              typeof data === 'object' &&
+              data !== null &&
+              'error' in data &&
+              typeof data.error === 'string'
                 ? data.error
                 : '投稿に失敗しました。時間を置いて再度お試しください。';
             throw new Error(message);
@@ -222,8 +234,8 @@ export const ReviewForm = () => {
       <header className="space-y-2">
         <h1 className="text-xl font-semibold text-slate-900">アンケートを投稿する</h1>
         <p className="text-sm text-slate-600">
-        LINEで本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典も
-        LINEでご案内します。
+          LINEで本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典も
+          LINEでご案内します。
         </p>
         {!auth?.lineUser ? (
           <button
@@ -238,17 +250,13 @@ export const ReviewForm = () => {
       </header>
 
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-        <Field
-          label="店舗名"
-          required
-          error={errors.storeName?.message}
-        >
+        <Field label="店舗名" required error={errors.storeName?.message}>
           <input
             id="storeName"
             type="text"
             placeholder="例: 静岡🚗アンドエッセンス"
             {...register('storeName', { required: '店舗名は必須です' })}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
           />
         </Field>
 
@@ -256,7 +264,7 @@ export const ReviewForm = () => {
           <select
             id="prefecture"
             {...register('prefecture', { required: '都道府県を選択してください' })}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
           >
             <option value="">選択してください</option>
             {PREFECTURES.map((prefecture) => (
@@ -271,7 +279,7 @@ export const ReviewForm = () => {
           <select
             id="category"
             {...register('category', { required: '業種を選択してください' })}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
           >
             <option value="">選択してください</option>
             {REVIEW_CATEGORIES.map((category) => (
@@ -287,7 +295,7 @@ export const ReviewForm = () => {
             id="visitedAt"
             type="month"
             {...register('visitedAt', { required: '働いた時期を入力してください' })}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
           />
         </Field>
 
@@ -296,7 +304,7 @@ export const ReviewForm = () => {
             <select
               id="age"
               {...register('age', { valueAsNumber: true, required: '年齢を選択してください' })}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
             >
               {AGE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -313,7 +321,7 @@ export const ReviewForm = () => {
                 valueAsNumber: true,
                 required: 'スペックを選択してください',
               })}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
             >
               {SPEC_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -330,7 +338,7 @@ export const ReviewForm = () => {
                 valueAsNumber: true,
                 required: '待機時間を選択してください',
               })}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
             >
               {WAIT_TIME_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -347,7 +355,7 @@ export const ReviewForm = () => {
                 valueAsNumber: true,
                 required: '平均稼ぎを選択してください',
               })}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
             >
               {AVERAGE_EARNING_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -364,12 +372,14 @@ export const ReviewForm = () => {
             rows={5}
             placeholder="店舗の雰囲気やスタッフ対応など、自由にご記入ください"
             {...register('comment')}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-100"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100 focus:outline-none"
           />
         </Field>
 
         <div className="space-y-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-500">
-          <p>投稿が完了すると、登録のLINEアカウントに PayPay 1,000円の受け取り方法をお送りします。</p>
+          <p>
+            投稿が完了すると、登録のLINEアカウントに PayPay 1,000円の受け取り方法をお送りします。
+          </p>
           <p>虚偽または第三者の情報が含まれる場合、掲載を停止することがあります。</p>
         </div>
 
