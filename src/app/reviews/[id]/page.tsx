@@ -51,8 +51,7 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
 
       <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900">投稿者のコメント</h2>
-        <p className="mt-2 text-sm text-slate-500">{review.authorDisplayName ?? '匿名店舗アンケート'}</p>
-        <p className="mt-4 whitespace-pre-line text-base leading-relaxed text-slate-700">
+        <p className="mt-4 text-base leading-relaxed whitespace-pre-line text-slate-700">
           {review.description && review.description.trim().length > 0
             ? review.description
             : '詳細コメントは準備中です。'}
@@ -62,17 +61,11 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
   );
 }
 
-const InfoGroup = ({
-  items,
-}: {
-  items: { label: string; value: string }[];
-}) => (
+const InfoGroup = ({ items }: { items: { label: string; value: string }[] }) => (
   <div className="space-y-4">
     {items.map((item) => (
       <div key={item.label}>
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {item.label}
-        </p>
+        <p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">{item.label}</p>
         <p className="mt-1 text-base font-semibold text-slate-900">{item.value}</p>
       </div>
     ))}
