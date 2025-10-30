@@ -398,7 +398,7 @@ export const ReviewForm = () => {
           disabled={status === 'submitting'}
           className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-pink-400 hover:to-violet-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {status === 'submitting' ? '送信中...' : 'この内容で投稿する'}
+          {status === 'submitting' ? '送信中...' : '投稿してPayPayを受け取る'}
         </button>
       </form>
     </section>

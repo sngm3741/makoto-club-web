@@ -53,7 +53,7 @@ export const Header = () => {
             onClick={handleLineLogin}
             className="hidden rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-pink-400 hover:to-violet-400 md:inline-block"
           >
-            相談はこちら
+            相談する
           </button>
           <button
             type="button"
@@ -108,7 +108,7 @@ export const Header = () => {
             onClick={handleLineLogin}
             className="rounded-lg bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 text-center text-white"
           >
-            相談はこちら
+            相談する
           </button>
         </nav>
       </div>
