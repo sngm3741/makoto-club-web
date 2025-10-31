@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { ReviewCard } from '@/components/reviews/review-card';
 import { SearchForm } from '@/components/search/search-form';
+import { TwitterLoginStatus } from '@/components/twitter/twitter-login-status';
 import { fetchFeaturedReviews } from '@/lib/reviews';
 
 export default async function HomePage() {
@@ -14,20 +15,25 @@ export default async function HomePage() {
           <p className="inline-flex rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-pink-600">
             風俗で働く女の子のための口コミメディア
           </p>
-          <h1 className="text-3xl font-semibold leading-snug text-slate-900">
+          <h1 className="text-3xl leading-snug font-semibold text-slate-900">
             リアルなアンケートで、
             <br className="hidden sm:block" />
             自分にぴったりの店舗を探そう
           </h1>
           <p className="text-sm leading-relaxed text-slate-600">
             500件以上のアンケートを集約。待機時間や平均稼ぎなど、気になるポイント別に検索できます。
-            LINEでログインすると投稿もできて、PayPay1,000円の特典も。
+            X（旧Twitter）でログインすると投稿もできて、PayPay1,000円の特典をDMでご案内します。
           </p>
           <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">500件以上のレビュー</span>
-            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">全国47都道府県対応</span>
-            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">LINE連携で安心サポート</span>
+            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">
+              500件以上のレビュー
+            </span>
+            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">
+              全国47都道府県対応
+            </span>
+            <span className="rounded-full bg-white/90 px-3 py-1 font-medium">X連携で本人確認</span>
           </div>
+          <TwitterLoginStatus />
         </div>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-800">条件から探す</h2>
@@ -71,7 +77,7 @@ export default async function HomePage() {
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-700 p-6 text-white shadow-lg">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">
+          <p className="text-sm font-semibold tracking-[0.2em] text-white/70 uppercase">
             オフィシャルTwitter
           </p>
           <h3 className="mt-4 text-2xl font-semibold">最新イベント情報を毎日発信中</h3>
@@ -90,15 +96,15 @@ export default async function HomePage() {
         </div>
         <div className="rounded-3xl border border-pink-200 bg-white p-6 shadow-lg">
           <p className="inline-flex rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-600">
-            友達登録でPayPayゲット
+            投稿でPayPayをプレゼント
           </p>
           <h3 className="mt-4 text-2xl font-semibold text-slate-900">
-            LINE登録で投稿すると
+            Xログインで投稿すると
             <br />
             PayPay 1,000円プレゼント
           </h3>
           <p className="mt-2 text-sm text-slate-600">
-            「相談はこちら」ボタンからLINEでログイン。投稿完了後に専用の受け取りリンクをお送りします。
+            「投稿してPayPayを受け取る」からXログインするとアンケートを投稿できます。審査完了後に公式アカウントからDMで受け取りリンクをお送りします。
           </p>
           <Link
             href="/reviews/new"

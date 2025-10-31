@@ -1,33 +1,34 @@
 'use client';
 
-type LineUser = {
+type TwitterUser = {
   userId: string;
+  username: string;
   displayName: string;
   avatarUrl?: string;
 };
 
-export type LineLoginResult = {
+export type TwitterLoginResult = {
   accessToken: string;
-  lineUser: LineUser;
+  twitterUser: TwitterUser;
 };
 
-export const AUTH_STORAGE_KEY = 'makotoClubLineAuth';
-export const AUTH_UPDATE_EVENT = 'line-auth:updated';
+export const AUTH_STORAGE_KEY = 'makotoClubTwitterAuth';
+export const AUTH_UPDATE_EVENT = 'twitter-auth:updated';
 
 export type LoginResponseMessage =
   | {
-      type: 'line-login-result';
+      type: 'oauth-login-result';
       success: true;
       state: string;
       payload: {
         accessToken: string;
         tokenType: string;
         expiresIn: number;
-        lineUser: LineUser;
+        twitterUser: TwitterUser;
       };
     }
   | {
-      type: 'line-login-result';
+      type: 'oauth-login-result';
       success: false;
       state?: string;
       error?: string;
@@ -37,30 +38,30 @@ function normaliseBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '');
 }
 
-export function readStoredAuth(): LineLoginResult | undefined {
+export function readStoredAuth(): TwitterLoginResult | undefined {
   if (typeof window === 'undefined') return undefined;
   const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
   if (!raw) return undefined;
   try {
-    return JSON.parse(raw) as LineLoginResult;
+    return JSON.parse(raw) as TwitterLoginResult;
   } catch {
     return undefined;
   }
 }
 
-export async function startLineLogin(baseUrl: string): Promise<void> {
+export async function startTwitterLogin(baseUrl: string): Promise<void> {
   if (typeof window === 'undefined') {
     throw new Error('クライアント環境でのみ実行できます。');
   }
 
   if (!baseUrl) {
-    throw new Error('LINEログインのエンドポイントが設定されていません。');
+    throw new Error('Xログインのエンドポイントが設定されていません。');
   }
 
   const endpoint = normaliseBaseUrl(baseUrl);
   const origin = window.location.origin;
 
-  const response = await fetch(`${endpoint}/line/login`, {
+  const response = await fetch(`${endpoint}/twitter/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -70,7 +71,7 @@ export async function startLineLogin(baseUrl: string): Promise<void> {
 
   if (!response.ok) {
     const message = await safeParseError(response);
-    throw new Error(message ?? 'LINEログインの開始に失敗しました。');
+    throw new Error(message ?? 'Xログインの開始に失敗しました。');
   }
 
   const { authorizationUrl } = (await response.json()) as {
@@ -78,18 +79,16 @@ export async function startLineLogin(baseUrl: string): Promise<void> {
   };
 
   if (!authorizationUrl) {
-    throw new Error('LINEログインの初期化に失敗しました。');
+    throw new Error('Xログインの初期化に失敗しました。');
   }
 
   window.location.assign(authorizationUrl);
 }
 
-export function persistAuthResult(result: LineLoginResult) {
+export function persistAuthResult(result: TwitterLoginResult) {
   if (typeof window === 'undefined') return;
   sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(result));
-  window.dispatchEvent(
-    new CustomEvent<LineLoginResult>(AUTH_UPDATE_EVENT, { detail: result }),
-  );
+  window.dispatchEvent(new CustomEvent<TwitterLoginResult>(AUTH_UPDATE_EVENT, { detail: result }));
 }
 
 async function safeParseError(response: Response): Promise<string | undefined> {

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { LineLoginHandler } from '@/components/line/line-login-handler';
+import { TwitterLoginHandler } from '@/components/twitter/twitter-login-handler';
 import { SITE_NAME } from '@/config/site';
 
 import './globals.css';
@@ -27,9 +27,7 @@ export const metadata: Metadata = {
     '全国の風俗で働く女の子のための口コミ検索サービス。実際のアンケート情報から安心して働ける店舗を探せます。',
   metadataBase:
     process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL
-      ? new URL(
-          (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL) as string,
-        )
+      ? new URL((process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL) as string)
       : undefined,
   openGraph: {
     title: `${SITE_NAME} | 風俗口コミで働き先さがし`,
@@ -49,7 +47,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-slate-900 antialiased`}
       >
-        <LineLoginHandler />
+        <TwitterLoginHandler />
         <div className="flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">

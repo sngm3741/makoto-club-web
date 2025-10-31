@@ -13,10 +13,10 @@ import {
 } from '@/constants/filters';
 import {
   AUTH_UPDATE_EVENT,
-  LineLoginResult,
+  TwitterLoginResult,
   readStoredAuth,
-  startLineLogin,
-} from '@/lib/line-auth';
+  startTwitterLogin,
+} from '@/lib/twitter-auth';
 
 type FormValues = {
   storeName: string;
@@ -30,7 +30,7 @@ type FormValues = {
   comment: string;
 };
 
-const LINE_AUTH_BASE_URL = process.env.NEXT_PUBLIC_LINE_AUTH_BASE_URL ?? '';
+const TWITTER_AUTH_BASE_URL = process.env.NEXT_PUBLIC_TWITTER_AUTH_BASE_URL ?? '';
 const PENDING_REVIEW_STORAGE_KEY = 'makotoClubPendingReview';
 
 const storePendingReview = (values: FormValues) => {
@@ -59,7 +59,7 @@ const clearPendingReview = () => {
 };
 
 export const ReviewForm = () => {
-  const [auth, setAuth] = useState<LineLoginResult | undefined>();
+  const [auth, setAuth] = useState<TwitterLoginResult | undefined>();
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -92,7 +92,7 @@ export const ReviewForm = () => {
     }
 
     const listener: EventListener = (event) => {
-      const custom = event as CustomEvent<LineLoginResult>;
+      const custom = event as CustomEvent<TwitterLoginResult>;
       if (!custom.detail) return;
       setAuth(custom.detail);
       setErrorMessage('');
@@ -106,10 +106,10 @@ export const ReviewForm = () => {
     };
   }, []);
 
-  const handleLineLogin = useCallback(async () => {
+  const handleTwitterLogin = useCallback(async () => {
     if (typeof window === 'undefined') return;
-    if (!LINE_AUTH_BASE_URL) {
-      setErrorMessage('LINEログインのエンドポイントが設定されていません。');
+    if (!TWITTER_AUTH_BASE_URL) {
+      setErrorMessage('Xログインのエンドポイントが設定されていません。');
       setStatus('error');
       return;
     }
@@ -118,14 +118,14 @@ export const ReviewForm = () => {
     setErrorMessage('');
 
     try {
-      await startLineLogin(LINE_AUTH_BASE_URL);
+      await startTwitterLogin(TWITTER_AUTH_BASE_URL);
       setStatus('idle');
     } catch (error) {
       console.error(error);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'LINEログインに失敗しました。時間を置いて再度お試しください。',
+          : 'Xログインに失敗しました。時間を置いて再度お試しください。',
       );
       setStatus('error');
     } finally {
@@ -138,7 +138,7 @@ export const ReviewForm = () => {
       if (!auth?.accessToken) {
         storePendingReview(values);
         hasAutoSubmitted.current = false;
-        handleLineLogin();
+        handleTwitterLogin();
         return;
       }
 
@@ -182,7 +182,7 @@ export const ReviewForm = () => {
               setErrorMessage('');
               hasAutoSubmitted.current = false;
               setAuth(undefined);
-              handleLineLogin();
+              handleTwitterLogin();
               return;
             }
             const message =
@@ -211,7 +211,7 @@ export const ReviewForm = () => {
         setStatus('error');
       }
     },
-    [auth, reset],
+    [auth, handleTwitterLogin, reset],
   );
 
   useEffect(() => {
@@ -234,17 +234,21 @@ export const ReviewForm = () => {
       <header className="space-y-2">
         <h1 className="text-xl font-semibold text-slate-900">アンケートを投稿する</h1>
         <p className="text-sm text-slate-600">
-          LINEで本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典も
-          LINEでご案内します。
+          X（旧Twitter）で本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典はTwitterのDMでご案内します。
         </p>
-        {!auth?.lineUser ? (
+        {auth?.twitterUser ? (
+          <p className="text-sm text-slate-600">
+            アンケート審査中です。審査後に（@{auth.twitterUser.username}）へDMをお送りします。
+          </p>
+        ) : null}
+        {!auth?.twitterUser ? (
           <button
             type="button"
-            onClick={handleLineLogin}
+            onClick={handleTwitterLogin}
             className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:from-pink-400 hover:to-violet-400"
             disabled={authLoading}
           >
-            {authLoading ? 'LINEで認証中…' : 'LINEでログインして投稿する'}
+            {authLoading ? 'Xで認証中…' : 'Twitterでログインする'}
           </button>
         ) : null}
       </header>
@@ -377,15 +381,13 @@ export const ReviewForm = () => {
         </Field>
 
         <div className="space-y-2 rounded-2xl bg-slate-50 p-4 text-xs text-slate-500">
-          <p>
-            投稿が完了すると、登録のLINEアカウントに PayPay 1,000円の受け取り方法をお送りします。
-          </p>
+          <p>投稿が完了すると、登録のTwitterアカウント宛に審査完了後のご案内をDMでお送りします。</p>
           <p>虚偽または第三者の情報が含まれる場合、掲載を停止することがあります。</p>
         </div>
 
         {status === 'success' ? (
           <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            投稿ありがとうございます！運営チームが内容を確認後、LINEで特典のご案内を送ります。
+            投稿ありがとうございます！運営チームが内容を確認後、TwitterのDMで特典のご案内をお送りします。
           </p>
         ) : null}
 

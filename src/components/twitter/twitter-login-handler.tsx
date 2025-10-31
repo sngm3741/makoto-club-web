@@ -2,11 +2,7 @@
 
 import { startTransition, useEffect, useState } from 'react';
 
-import {
-  LoginResponseMessage,
-  LineLoginResult,
-  persistAuthResult,
-} from '@/lib/line-auth';
+import { LoginResponseMessage, TwitterLoginResult, persistAuthResult } from '@/lib/twitter-auth';
 
 type MessageState =
   | {
@@ -18,14 +14,13 @@ type MessageState =
       text: string;
     };
 
-const HASH_PREFIX = '#line-login=';
+const HASH_PREFIX = '#oauth-login=';
 
 function decodeMessage(encoded: string): LoginResponseMessage | undefined {
   try {
     const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
     const padding = normalized.length % 4;
-    const padded =
-      padding === 0 ? normalized : normalized + '='.repeat(4 - padding);
+    const padded = padding === 0 ? normalized : normalized + '='.repeat(4 - padding);
     const json = window.atob(padded);
     return JSON.parse(json) as LoginResponseMessage;
   } catch {
@@ -33,21 +28,21 @@ function decodeMessage(encoded: string): LoginResponseMessage | undefined {
   }
 }
 
-function toLineLoginResult(message: LoginResponseMessage): LineLoginResult | undefined {
+function toTwitterLoginResult(message: LoginResponseMessage): TwitterLoginResult | undefined {
   if (!message.success) {
     return undefined;
   }
   const payload = message.payload;
-  if (!payload?.accessToken || !payload?.lineUser) {
+  if (!payload?.accessToken || !payload?.twitterUser) {
     return undefined;
   }
   return {
     accessToken: payload.accessToken,
-    lineUser: payload.lineUser,
+    twitterUser: payload.twitterUser,
   };
 }
 
-export const LineLoginHandler = () => {
+export const TwitterLoginHandler = () => {
   const [message, setMessage] = useState<MessageState | null>(null);
 
   useEffect(() => {
@@ -61,32 +56,32 @@ export const LineLoginHandler = () => {
     window.history.replaceState(null, '', `${pathname}${search}`);
 
     const parsed = decodeMessage(encoded);
-    if (!parsed || parsed.type !== 'line-login-result') {
+    if (!parsed || parsed.type !== 'oauth-login-result') {
       startTransition(() =>
         setMessage({
           variant: 'error',
-          text: 'LINEログインの応答が不明です。時間を置いて再度お試しください。',
+          text: 'Xログインの応答が不明です。時間を置いて再度お試しください。',
         }),
       );
       return;
     }
 
     if (parsed.success) {
-      const result = toLineLoginResult(parsed);
+      const result = toTwitterLoginResult(parsed);
       if (result) {
         persistAuthResult(result);
       }
       startTransition(() =>
         setMessage({
           variant: 'success',
-          text: 'LINEが送られました。確認お願いします。',
+          text: 'X認証が完了しました。アンケート審査の結果をお待ちください。',
         }),
       );
     } else {
       startTransition(() =>
         setMessage({
           variant: 'error',
-          text: parsed.error ?? 'LINEログインがキャンセルされました。',
+          text: parsed.error ?? 'Xログインがキャンセルされました。',
         }),
       );
     }
