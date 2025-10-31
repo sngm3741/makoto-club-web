@@ -63,6 +63,7 @@ export const ReviewForm = () => {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const hasAutoSubmitted = useRef(false);
 
   const {
@@ -205,6 +206,7 @@ export const ReviewForm = () => {
         reset();
         clearPendingReview();
         hasAutoSubmitted.current = false;
+        setShowSuccessModal(true);
       } catch (error) {
         console.error(error);
         setErrorMessage('投稿に失敗しました。時間を置いて再度お試しください。');
@@ -403,6 +405,30 @@ export const ReviewForm = () => {
           {status === 'submitting' ? '送信中...' : '投稿してPayPayを受け取る'}
         </button>
       </form>
+
+      {showSuccessModal ? (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="space-y-3 text-center">
+              <h2 className="text-lg font-semibold text-slate-900">投稿を受け付けました</h2>
+              <p className="text-sm text-slate-600">
+                アンケートありがとうございます！内容を審査後、Twitter の DM（@
+                {auth?.twitterUser?.username ?? '---'}）へ PayPay 1,000 円分のリンクをご案内します。
+              </p>
+              <p className="text-xs text-slate-400">
+                審査には最大で 2〜3 営業日ほどお時間をいただく場合があります。
+              </p>
+            </div>
+            <button
+              type="button"
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:from-pink-400 hover:to-violet-400"
+              onClick={() => setShowSuccessModal(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };
