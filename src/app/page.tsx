@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { ReviewCard } from '@/components/reviews/review-card';
 import { SearchForm } from '@/components/search/search-form';
-import { TwitterLoginStatus } from '@/components/twitter/twitter-login-status';
 import { fetchFeaturedReviews } from '@/lib/reviews';
 
 export default async function HomePage() {
@@ -33,7 +32,6 @@ export default async function HomePage() {
             </span>
             <span className="rounded-full bg-white/90 px-3 py-1 font-medium">X連携で本人確認</span>
           </div>
-          <TwitterLoginStatus />
         </div>
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-slate-800">条件から探す</h2>

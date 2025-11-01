@@ -238,11 +238,6 @@ export const ReviewForm = () => {
         <p className="text-sm text-slate-600">
           X（旧Twitter）で本人確認をした上で、実際に働いた体験をシェアしてください。PayPay1,000円の特典はTwitterのDMでご案内します。
         </p>
-        {auth?.twitterUser ? (
-          <p className="text-sm text-slate-600">
-            アンケート審査中です。審査後に（@{auth.twitterUser.username}）へDMをお送りします。
-          </p>
-        ) : null}
         {!auth?.twitterUser ? (
           <button
             type="button"
