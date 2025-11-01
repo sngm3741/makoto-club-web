@@ -70,6 +70,9 @@ export const AdminReviewDashboard = ({
   const [statusNote, setStatusNote] = useState('');
   const [rewardNote, setRewardNote] = useState('');
   const [reviewedBy, setReviewedBy] = useState('');
+  const [pendingInitialSelection, setPendingInitialSelection] = useState<string | null>(
+    initialSelectedId ?? null,
+  );
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -83,33 +86,47 @@ export const AdminReviewDashboard = ({
         throw new Error(`一覧取得に失敗しました (${response.status})`);
       }
       const data = (await response.json()) as { items: AdminReview[] };
+      const currentSelectedId = selected?.id ?? null;
+      const targetId = pendingInitialSelection ?? currentSelectedId ?? undefined;
+      if (pendingInitialSelection && statusFilter !== 'all') {
+        const existsInCurrent = data.items.some((item) => item.id === pendingInitialSelection);
+        if (!existsInCurrent) {
+          setStatusFilter('all');
+          return;
+        }
+      }
+
       setReviews(data.items);
-      if (data.items.length > 0) {
-        setSelected((prev) => {
-          const targetId = initialSelectedId ?? prev?.id;
-          if (targetId) {
-            const next = data.items.find((item) => item.id === targetId);
-            if (next) {
-              return next;
-            }
-          }
-          if (prev) {
-            const next = data.items.find((item) => item.id === prev.id);
-            if (next) {
-              return next;
-            }
-          }
-          return data.items[0];
-        });
-      } else {
+
+      if (data.items.length === 0) {
         setSelected(null);
+        return;
+      }
+
+      const candidateId = targetId;
+      const matched =
+        candidateId !== undefined && candidateId !== null
+          ? data.items.find((item) => item.id === candidateId) ?? null
+          : null;
+      const fallback =
+        currentSelectedId && !matched
+          ? data.items.find((item) => item.id === currentSelectedId) ?? null
+          : null;
+      const nextSelected = matched || fallback || data.items[0];
+      setSelected(nextSelected);
+      if (
+        pendingInitialSelection &&
+        nextSelected &&
+        nextSelected.id === pendingInitialSelection
+      ) {
+        setPendingInitialSelection(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '一覧取得に失敗しました');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, initialSelectedId]);
+  }, [statusFilter, pendingInitialSelection, selected?.id]);
 
   useEffect(() => {
     void fetchReviews();
