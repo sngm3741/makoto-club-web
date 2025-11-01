@@ -57,7 +57,11 @@ const statusOptions: { value: StatusOption; label: string }[] = [
   { value: 'all', label: 'すべて' },
 ];
 
-export const AdminReviewDashboard = () => {
+export const AdminReviewDashboard = ({
+  initialSelectedId,
+}: {
+  initialSelectedId?: string;
+} = {}) => {
   const [statusFilter, setStatusFilter] = useState<StatusOption>('pending');
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [selected, setSelected] = useState<AdminReview | null>(null);
@@ -82,9 +86,18 @@ export const AdminReviewDashboard = () => {
       setReviews(data.items);
       if (data.items.length > 0) {
         setSelected((prev) => {
+          const targetId = initialSelectedId ?? prev?.id;
+          if (targetId) {
+            const next = data.items.find((item) => item.id === targetId);
+            if (next) {
+              return next;
+            }
+          }
           if (prev) {
             const next = data.items.find((item) => item.id === prev.id);
-            return next ?? data.items[0];
+            if (next) {
+              return next;
+            }
           }
           return data.items[0];
         });
@@ -96,7 +109,7 @@ export const AdminReviewDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, initialSelectedId]);
 
   useEffect(() => {
     void fetchReviews();
