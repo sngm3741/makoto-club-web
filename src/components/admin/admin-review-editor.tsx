@@ -1,6 +1,6 @@
 'use client';
 
-import { type ChangeEvent, type FormEvent, useCallback, useState } from 'react';
+import { type ChangeEvent, type FormEvent, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import {
@@ -83,6 +83,46 @@ export function AdminReviewEditor({ initialReview }: { initialReview: AdminRevie
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const contentBaseline = useMemo(
+    () => ({
+      storeName: review.storeName,
+      prefecture: review.prefecture,
+      category: review.category,
+      visitedAt: review.visitedAt,
+      age: String(review.age),
+      specScore: String(review.specScore),
+      waitTimeHours: String(review.waitTimeHours),
+      averageEarning: String(review.averageEarning),
+      comment: review.comment ?? '',
+    }),
+    [review],
+  );
+
+  const statusBaseline = useMemo(
+    () => ({
+      status: review.status,
+      statusNote: review.statusNote ?? '',
+      reviewedBy: review.reviewedBy ?? '',
+      rewardStatus: review.rewardStatus,
+      rewardNote: review.rewardNote ?? '',
+    }),
+    [review],
+  );
+
+  const isContentDirty = useMemo(() => {
+    return Object.entries(contentBaseline).some(([key, value]) => {
+      const formValue = form[key as keyof typeof form];
+      return formValue !== value;
+    });
+  }, [contentBaseline, form]);
+
+  const isStatusDirty = useMemo(() => {
+    return Object.entries(statusBaseline).some(([key, value]) => {
+      const formValue = statusForm[key as keyof typeof statusForm];
+      return formValue !== value;
+    });
+  }, [statusBaseline, statusForm]);
+
   const handleContentChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = event.target;
@@ -141,8 +181,7 @@ export function AdminReviewEditor({ initialReview }: { initialReview: AdminRevie
 
         const updated = (await response.json()) as AdminReview;
         setReview(updated);
-        setForm((prev) => ({
-          ...prev,
+        setForm({
           storeName: updated.storeName,
           prefecture: updated.prefecture,
           category: updated.category,
@@ -152,7 +191,7 @@ export function AdminReviewEditor({ initialReview }: { initialReview: AdminRevie
           waitTimeHours: String(updated.waitTimeHours),
           averageEarning: String(updated.averageEarning),
           comment: updated.comment ?? '',
-        }));
+        });
         setMessage('アンケート内容を更新しました');
       } catch (err) {
         setError(err instanceof Error ? err.message : '内容の更新に失敗しました');
@@ -377,9 +416,9 @@ export function AdminReviewEditor({ initialReview }: { initialReview: AdminRevie
             <button
               type="submit"
               className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow disabled:opacity-60"
-              disabled={savingContent}
+              disabled={savingContent || !isContentDirty}
             >
-              {savingContent ? '保存中…' : '内容を保存する'}
+              {savingContent ? '保存中…' : '更新する'}
             </button>
           </div>
         </form>
@@ -460,7 +499,7 @@ export function AdminReviewEditor({ initialReview }: { initialReview: AdminRevie
             <button
               type="submit"
               className="rounded-full bg-pink-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-pink-500 disabled:opacity-60"
-              disabled={savingStatus}
+              disabled={savingStatus || !isStatusDirty}
             >
               {savingStatus ? '更新中…' : 'ステータスを更新する'}
             </button>
