@@ -31,7 +31,7 @@ type AdminReview = {
 
 type PageProps = {
   params: {
-    id: string;
+    id?: string;
   };
 };
 
@@ -51,8 +51,15 @@ async function fetchReview(id: string): Promise<AdminReview> {
   return (await response.json()) as AdminReview;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminReviewDetailPage({ params }: PageProps) {
-  const review = await fetchReview(params.id);
+  const id = params?.id;
+  if (!id) {
+    notFound();
+  }
+
+  const review = await fetchReview(id);
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       <AdminReviewEditor initialReview={review} />
