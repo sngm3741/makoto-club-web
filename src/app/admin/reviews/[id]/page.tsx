@@ -38,10 +38,12 @@ type AdminReview = {
   updatedAt: string;
 };
 
+type RouteParams = {
+  id?: string;
+};
+
 type PageProps = {
-  params: {
-    id?: string;
-  };
+  params: RouteParams | Promise<RouteParams>;
 };
 
 async function fetchReview(id: string): Promise<AdminReview> {
@@ -80,10 +82,11 @@ async function fetchReview(id: string): Promise<AdminReview> {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminReviewDetailPage({ params }: PageProps) {
-  const id = params?.id;
-  logInfo('page render start', { params });
+  const resolvedParams = params instanceof Promise ? await params : params;
+  logInfo('page render start', { params: resolvedParams });
+  const id = resolvedParams?.id;
   if (!id) {
-    logError('params.id is missing. params:', params);
+    logError('params.id is missing.', resolvedParams);
     notFound();
   }
 
